@@ -1,63 +1,49 @@
 <?php
-// Include config file
 require_once "config.php";
 
 // Define variables and initialize with empty values
-$flight_number = $departure = $destination = $departure_time = "";
-$flight_number_err = $departure_err = $destination_err = $departure_time_err = "";
+$service_name = $description = $price = "";
+$service_name_err = $price_err = "";
 
 // Processing form data when form is submitted
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Validate flight number
-    if (empty(trim($_POST["flight_number"]))) {
-        $flight_number_err = "Please enter a flight number.";
+    // Validate service name
+    if (empty(trim($_POST["service_name"]))) {
+        $service_name_err = "Please enter a service name.";
     } else {
-        $flight_number = trim($_POST["flight_number"]);
+        $service_name = trim($_POST["service_name"]);
     }
 
-    // Validate departure
-    if (empty(trim($_POST["departure"]))) {
-        $departure_err = "Please enter a departure location.";
+    // Validate price
+    if (empty(trim($_POST["price"]))) {
+        $price_err = "Please enter the price.";
+    } elseif (!is_numeric(trim($_POST["price"]))) {
+        $price_err = "Price must be a numeric value.";
     } else {
-        $departure = trim($_POST["departure"]);
+        $price = trim($_POST["price"]);
     }
 
-    // Validate destination
-    if (empty(trim($_POST["destination"]))) {
-        $destination_err = "Please enter a destination.";
-    } else {
-        $destination = trim($_POST["destination"]);
-    }
-
-    // Validate departure time
-    if (empty(trim($_POST["departure_time"]))) {
-        $departure_time_err = "Please enter the departure time.";
-    } else {
-        $departure_time = trim($_POST["departure_time"]);
-    }
-
-    // Check input errors before inserting in database
-    if (empty($flight_number_err) && empty($departure_err) && empty($destination_err) && empty($departure_time_err)) {
+    // Check input errors before inserting into database
+    if (empty($service_name_err) && empty($price_err)) {
         // Prepare an insert statement
-        $sql = "INSERT INTO flights (flight_number, departure, destination, departure_time) VALUES (?, ?, ?, ?)";
+        $sql = "INSERT INTO services (service_name, description, price) VALUES (?, ?, ?)";
 
         if ($stmt = mysqli_prepare($link, $sql)) {
             // Bind variables to the prepared statement as parameters
-            mysqli_stmt_bind_param($stmt, "ssss", $param_flight_number, $param_departure, $param_destination, $param_departure_time);
+            mysqli_stmt_bind_param($stmt, "ssd", $param_service_name, $param_description, $param_price);
 
             // Set parameters
-            $param_flight_number = $flight_number;
-            $param_departure = $departure;
-            $param_destination = $destination;
-            $param_departure_time = $departure_time;
+            $param_service_name = $service_name;
+            $param_description = $_POST["description"];
+            $param_price = $price;
 
             // Attempt to execute the prepared statement
             if (mysqli_stmt_execute($stmt)) {
-                // Records created successfully. Redirect to landing page
-                header("location: index.php");
+                // Redirect to read.php after successful creation
+                header("location: read.php");
                 exit();
             } else {
-                echo "Oops! Something went wrong. Please try again later.";
+                echo "Something went wrong. Please try again later.";
             }
         }
 
@@ -72,54 +58,36 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
-    <title>Create Flight Record</title>
+    <title>Add Service</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <style>
-        .wrapper {
-            width: 600px;
-            margin: 0 auto;
-        }
-    </style>
 </head>
-
 <body>
-    <div class="wrapper">
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-md-12">
-                    <h2 class="mt-5">Create Flight Record</h2>
-                    <p>Please fill this form and submit to add flight record to the database.</p>
-                    <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="post">
-                        <div class="form-group">
-                            <label>Flight Number</label>
-                            <input type="text" name="flight_number" class="form-control <?php echo (!empty($flight_number_err)) ? 'is-invalid' : ''; ?>" value="<?php echo htmlspecialchars($flight_number); ?>">
-                            <span class="invalid-feedback"><?php echo $flight_number_err; ?></span>
-                        </div>
-                        <div class="form-group">
-                            <label>Departure</label>
-                            <input type="text" name="departure" class="form-control <?php echo (!empty($departure_err)) ? 'is-invalid' : ''; ?>" value="<?php echo htmlspecialchars($departure); ?>">
-                            <span class="invalid-feedback"><?php echo $departure_err; ?></span>
-                        </div>
-                        <div class="form-group">
-                            <label>Destination</label>
-                            <input type="text" name="destination" class="form-control <?php echo (!empty($destination_err)) ? 'is-invalid' : ''; ?>" value="<?php echo htmlspecialchars($destination); ?>">
-                            <span class="invalid-feedback"><?php echo $destination_err; ?></span>
-                        </div>
-                        <div class="form-group">
-                            <label>Departure Time</label>
-                            <input type="text" name="departure_time" class="form-control <?php echo (!empty($departure_time_err)) ? 'is-invalid' : ''; ?>" value="<?php echo htmlspecialchars($departure_time); ?>">
-                            <span class="invalid-feedback"><?php echo $departure_time_err; ?></span>
-                        </div>
-                        <input type="submit" class="btn btn-primary" value="Submit">
-                        <a href="index.php" class="btn btn-secondary ml-2">Cancel</a>
-                    </form>
-                </div>
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-md-6">
+                <h2>Add Service</h2>
+                <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="post">
+                    <div class="form-group">
+                        <label>Service Name</label>
+                        <input type="text" name="service_name" class="form-control <?php echo (!empty($service_name_err)) ? 'is-invalid' : ''; ?>" value="<?php echo $service_name; ?>">
+                        <span class="invalid-feedback"><?php echo $service_name_err; ?></span>
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea name="description" class="form-control"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Price</label>
+                        <input type="text" name="price" class="form-control <?php echo (!empty($price_err)) ? 'is-invalid' : ''; ?>" value="<?php echo $price; ?>">
+                        <span class="invalid-feedback"><?php echo $price_err; ?></span>
+                    </div>
+                    <input type="submit" class="btn btn-primary" value="Submit">
+                    <a href="read.php" class="btn btn-secondary ml-2">Cancel</a>
+                </form>
             </div>
         </div>
     </div>
 </body>
-
 </html>
